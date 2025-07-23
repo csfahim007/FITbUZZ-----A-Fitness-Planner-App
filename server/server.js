@@ -41,7 +41,11 @@ app.use(helmet({
 }));
 
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
+  origin: [
+    'http://localhost:3000',
+    'http://localhost:5173',
+    process.env.FRONTEND_URL || 'https://your-frontend-app-name.onrender.com'
+  ],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token'],
   credentials: true,
@@ -71,7 +75,9 @@ app.use(xss());
 // Prevent parameter pollution
 app.use(hpp());
 
-// Static files in production
+// Remove the static file serving for separate deployment
+// This section is commented out since we're deploying frontend separately
+/*
 if (process.env.NODE_ENV === 'production') {
   app.use(express.static(path.join(__dirname, '../client/dist')));
 
@@ -79,6 +85,7 @@ if (process.env.NODE_ENV === 'production') {
     res.sendFile(path.resolve(__dirname, '../client/dist/index.html'));
   });
 }
+*/
 
 // Apply rate limiting to API routes
 app.use('/api/', apiLimiter);
@@ -102,19 +109,43 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// Root endpoint for API documentation
+app.get('/', (req, res) => {
+  res.json({
+    message: 'Fitness Tracker API',
+    version: '1.0.0',
+    endpoints: {
+      health: '/api/health',
+      auth: '/api/auth',
+      workouts: '/api/workouts',
+      exercises: '/api/exercises',
+      nutrition: '/api/nutrition'
+    },
+    documentation: 'Visit the frontend application for full functionality'
+  });
+});
+
 // Error Handler - Must be last middleware
 app.use(errorHandler);
 
-// Handle 404
+// Handle 404 for API routes only
+app.use('/api/*', (req, res) => {
+  res.status(404).json({
+    success: false,
+    message: 'API endpoint not found'
+  });
+});
+
+// Handle other 404s
 app.use((req, res) => {
   res.status(404).json({
     success: false,
-    message: 'Not Found'
+    message: 'This is the API server. Please visit the frontend application.'
   });
 });
 
 const PORT = process.env.PORT || 5000;
-const server = app.listen(PORT, () => {
+const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
 });
 
