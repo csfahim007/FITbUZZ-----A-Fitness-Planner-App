@@ -42,9 +42,7 @@ app.use(helmet({
 
 app.use(cors({
   origin: [
-    'http://localhost:3000',
-    'http://localhost:5173',
-    process.env.FRONTEND_URL || 'https://your-frontend-app-name.onrender.com'
+    process.env.CORS_ORIGIN || 'https://fitbuzz-frontend.onrender.com'
   ],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token'],
